@@ -16,7 +16,7 @@ constexpr int A3 = 17;
 constexpr int A4 = 18;
 constexpr int A5 = 19;
 
-void pinMode();
+void pinMode(int pin, pin_mode mode);
 
 void digitalWrite(int pin, pin_level value);
 pin_level digiralRead(int pin);
@@ -28,11 +28,32 @@ unsigned long millis();
 unsigned long micros();
 
 class Funshield_ {
-	static constexpr pin_led[] = { 13,12,11,10 };
-	static constexpr pin_button[] = { A1, A2, A3 };
-	static constexpr latch_pin = 4;
-	static constexpr clock_pin = 5;
-	static constexpr data_pin = 8;
+public:
+	void pinMode(int pin, pin_mode mode);
+	void digitalWrite(int pin, pin_level value);
+private:
+	//static constexpr int pin_led[] = { 13,12,11,10 };
+	//static constexpr int pin_button[] = { A1, A2, A3 };
+	static constexpr int led_count = 4;
+	static constexpr int first_led = 10;
+
+	static constexpr int button_count = 3;
+	static constexpr int first_button = A1;
+
+	static constexpr int latch = 4;
+	static constexpr int clock = 5;
+	static constexpr int data = 8;
+
+	struct pin {
+		pin_mode mode;
+		pin_level level;
+	};
+
+	pin led_pin[led_count]{};
+	pin button_pin[button_count]{};
+	pin latch_pin;
+	pin clock_pin;
+	pin data_pin;
 };
 
 // Strings
@@ -50,13 +71,19 @@ class Funshield_ {
 #define isWhitespace isblank
 
 // Okrajove pripady k vyreseni
+
+// LED:
+//// Cteni: pri input vzdy HIGH, pri output to, co bylo zapsano
+//// pinMode INPUT: LED je zhaslá, Zapis pri nastavenem pinmode na input: nedělá nic a digitalRead precte HIGH. 
+//// zmena pinmode na OUTPUT vzdy rozsviti LED (jakoby digitalWrite(LOW))
+
+// Cteni pinu jineho: podle toho, co je na pinu na shiedlu pripojeno, nekdy zalezi i na tom, jestli se nahodou nedotknu nejakeho kontaktu
 // Cteni neexistujiciho pinu: dava LOW
-// Cteni pinu jineho nez tlacitka: podle toho, co je na pinu na shiedlu pripojeno, nekdy zalezi i na tom, jestli se nahodou nedotknu nejakeho kontaktu
-// Zapis pri nastavenem pinmode na input
-// cteni pri nastavenem pinmode na output
+
 // SEGM.DISPLEJ
+//// registr obsahuje shift registr a storage registr, data se přesunou ze shift do storage při přechodu LATCH z LOW na HIGH
 //// - nenastaveny latch pred zapisem
 //// - nenastaveny latch po zapisu
 //// - shift pouze 1 byte misto dvou
 //// - shift 3 nebo 4 byte
-//// - LSBFIRST misto MSBFIRST
+//// - LSBFIRST misto MSBFIRST // asi logické
