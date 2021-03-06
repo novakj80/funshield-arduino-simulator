@@ -19,7 +19,7 @@ constexpr int A5 = 19;
 void pinMode(int pin, pin_mode mode);
 
 void digitalWrite(int pin, pin_level value);
-pin_level digiralRead(int pin);
+pin_level digitalRead(int pin);
 void shiftOut(int dataPin, int clockPin, bit_order bitOrder, byte value);
 
 void delay(unsigned long ms);
@@ -31,13 +31,18 @@ class Funshield_ {
 public:
 	void pinMode(int pin, pin_mode mode);
 	void digitalWrite(int pin, pin_level value);
+	pin_level digitalRead(int pin);
+	void shiftOut(int dataPin, int clockPin, bit_order bitOrder, byte value);
+	bool isLedOn(int led);
+	void setButton(int button, bool pressed);
+	static constexpr int led_count = 4;
+	static constexpr int button_count = 3;
 private:
 	//static constexpr int pin_led[] = { 13,12,11,10 };
 	//static constexpr int pin_button[] = { A1, A2, A3 };
-	static constexpr int led_count = 4;
+
 	static constexpr int first_led = 10;
 
-	static constexpr int button_count = 3;
 	static constexpr int first_button = A1;
 
 	static constexpr int latch = 4;
@@ -45,15 +50,23 @@ private:
 	static constexpr int data = 8;
 
 	struct pin {
-		pin_mode mode;
-		pin_level level;
+		pin_mode mode = INPUT;
+		pin_level level = HIGH;
 	};
 
-	pin led_pin[led_count]{};
-	pin button_pin[button_count]{};
+	pin led_pin[led_count];
+	pin button_pin[button_count];
 	pin latch_pin;
 	pin clock_pin;
 	pin data_pin;
+
+	byte segm_pos;
+	byte segm_data;
+	byte segm_pos_buffer;
+	byte segm_data_buffer;
+
+	bool pinIsLed(int pin) { return pin >= first_led && pin < first_led + led_count; }
+	bool pinIsButton(int pin) { return pin >= first_button && pin < first_button + button_count; }
 };
 
 // Strings
@@ -82,8 +95,7 @@ private:
 
 // SEGM.DISPLEJ
 //// registr obsahuje shift registr a storage registr, data se přesunou ze shift do storage při přechodu LATCH z LOW na HIGH
-//// - nenastaveny latch pred zapisem
-//// - nenastaveny latch po zapisu
-//// - shift pouze 1 byte misto dvou
-//// - shift 3 nebo 4 byte
-//// - LSBFIRST misto MSBFIRST // asi logické
+
+// TODO list
+// implementovat vsechny funkce z API
+// -muzu zjednodusit navratove hodnoty digitalread
