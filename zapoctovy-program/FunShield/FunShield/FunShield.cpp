@@ -1,10 +1,24 @@
 ﻿#include "FunShield.h"
+
+#include <thread>
+serial_monitor Serial;
 Funshield_ fs_;
 void pinMode(int pin, pin_mode mode)
 {
 	fs_.pinMode(pin, mode);
 }
 
+void digitalWrite(int pin, pin_level value) 
+{
+	fs_.digitalWrite(pin, value);
+}
+pin_level digitalRead(int pin) 
+{ 
+	return fs_.digitalRead(pin);
+}
+void shiftOut(int dataPin, int clockPin, bit_order bitOrder, byte value) { fs_.shiftOut(dataPin, clockPin, bitOrder, value); }
+unsigned long millis() { return fs_.millis(); }
+unsigned long micros() { return fs_.micros(); }
 void Funshield_::pinMode(int pin, pin_mode mode)
 {
 	// LED
@@ -89,6 +103,35 @@ void Funshield_::setButton(int button, bool pressed)
 {
 	if (button >= button_count || button < 0) return;
 	button_pin[button].level = pressed ? LOW : HIGH;
+}
+
+unsigned long Funshield_::millis()
+{
+	return std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - start_time).count();
+}
+
+unsigned long Funshield_::micros()
+{
+	return std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now() - start_time).count();
+}
+
+void delay(unsigned long ms)
+{
+	std::this_thread::sleep_for(std::chrono::milliseconds(ms));
+}
+void delayMicroseconds(unsigned int us)
+{
+	std::this_thread::sleep_for(std::chrono::microseconds(us));
+}
+
+long random(long max) 
+{ 
+	return std::rand() % max; 
+}
+long random(long min, long max)
+{
+  if (min >= max) return min;
+  return random(max - min) + min;
 }
 
 using namespace std;

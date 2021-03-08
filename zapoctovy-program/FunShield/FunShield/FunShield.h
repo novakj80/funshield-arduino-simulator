@@ -1,6 +1,7 @@
 ﻿#pragma once
 
 #include <iostream>
+#include <chrono>
 
 using byte = uint8_t;
 using boolean = bool;
@@ -35,6 +36,9 @@ public:
 	void shiftOut(int dataPin, int clockPin, bit_order bitOrder, byte value);
 	bool isLedOn(int led);
 	void setButton(int button, bool pressed);
+	unsigned long millis();
+	unsigned long micros();
+	void resetTime() { start_time = std::chrono::high_resolution_clock::now(); }
 	static constexpr int led_count = 4;
 	static constexpr int button_count = 3;
 private:
@@ -60,10 +64,15 @@ private:
 	pin clock_pin;
 	pin data_pin;
 
+	// Segment display data are intentionaly uninitialized
+#pragma warning(disable: 26495)
 	byte segm_pos;
 	byte segm_data;
 	byte segm_pos_buffer;
 	byte segm_data_buffer;
+#pragma warning(default: 26495)
+
+	std::chrono::time_point<std::chrono::high_resolution_clock> start_time;
 
 	bool pinIsLed(int pin) { return pin >= first_led && pin < first_led + led_count; }
 	bool pinIsButton(int pin) { return pin >= first_button && pin < first_button + button_count; }
@@ -83,6 +92,35 @@ private:
 #define isUpperCase isupper
 #define isWhitespace isblank
 
+class String
+{
+public:
+	void toCharArray(char* buff, unsigned int len) {};
+};
+
+// Dummy implementation of serial monitor
+// Allows programs which use serial monitor to compile without modifications
+class serial_monitor
+{
+public:
+	size_t available() { return 0; };
+	size_t availableForWrite() { return 0; };
+	void begin(int speed) {};
+	template <typename T> size_t print(T val) {};
+	template <typename T> size_t println(T val) {};
+	String readString() { return {}; };
+
+};
+
+extern serial_monitor Serial;
+
+// random
+#include <cstdlib>
+long random(long max);
+long random(long min, long max);
+
+void setup();
+void loop();
 // Okrajove pripady k vyreseni
 
 // LED:
