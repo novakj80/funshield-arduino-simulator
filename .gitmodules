@@ -1,0 +1,3 @@
+[submodule "zapoctovy-program/FunShield/FunShield/libs/wxWidgets"]
+	path = zapoctovy-program/FunShield/FunShield/libs/wxWidgets
+	url = https://github.com/wxWidgets/wxWidgets.git
