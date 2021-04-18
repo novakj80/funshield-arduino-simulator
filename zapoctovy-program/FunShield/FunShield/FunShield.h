@@ -4,7 +4,6 @@
 #include <chrono>
 
 using byte = uint8_t;
-using boolean = bool;
 
 enum pin_level {LOW = 0, HIGH = 1};
 enum pin_mode {INPUT, OUTPUT, INPUT_PULLUP};
@@ -34,14 +33,20 @@ public:
 	void digitalWrite(int pin, pin_level value);
 	pin_level digitalRead(int pin);
 	void shiftOut(int dataPin, int clockPin, bit_order bitOrder, byte value);
-	bool isLedOn(int led);
-	void setButton(int button, bool pressed);
 	unsigned long millis();
 	unsigned long micros();
+
+	// Global funshield instance getter
+	static Funshield_& getInstance();
+
+	// Functions for getting funshield state
+	bool isLedOn(int led);
+	void setButton(int button, bool pressed);
 	void resetTime() { start_time = std::chrono::high_resolution_clock::now(); }
 	static constexpr int led_count = 4;
 	static constexpr int button_count = 3;
 private:
+	static Funshield_ instance;
 	//static constexpr int pin_led[] = { 13,12,11,10 };
 	//static constexpr int pin_button[] = { A1, A2, A3 };
 
@@ -54,7 +59,7 @@ private:
 	static constexpr int data = 8;
 
 	struct pin {
-		pin_mode mode = INPUT;
+		pin_mode mode = pin_mode::INPUT;
 		pin_level level = HIGH;
 	};
 
@@ -106,8 +111,8 @@ public:
 	size_t available() { return 0; };
 	size_t availableForWrite() { return 0; };
 	void begin(int speed) {};
-	template <typename T> size_t print(T val) {};
-	template <typename T> size_t println(T val) {};
+	template <typename T> size_t print(T val) { return 0; };
+	template <typename T> size_t println(T val) { return 0; };
 	String readString() { return {}; };
 
 };

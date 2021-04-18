@@ -1,24 +1,28 @@
 ﻿#include "FunShield.h"
 
 #include <thread>
+Funshield_ Funshield_::instance;
+Funshield_& Funshield_::getInstance()
+{
+	return Funshield_::instance;
+}
 serial_monitor Serial;
-Funshield_ fs_;
 void pinMode(int pin, pin_mode mode)
 {
-	fs_.pinMode(pin, mode);
+	Funshield_::getInstance().pinMode(pin, mode);
 }
 
 void digitalWrite(int pin, pin_level value) 
 {
-	fs_.digitalWrite(pin, value);
+	Funshield_::getInstance().digitalWrite(pin, value);
 }
 pin_level digitalRead(int pin) 
 { 
-	return fs_.digitalRead(pin);
+	return Funshield_::getInstance().digitalRead(pin);
 }
-void shiftOut(int dataPin, int clockPin, bit_order bitOrder, byte value) { fs_.shiftOut(dataPin, clockPin, bitOrder, value); }
-unsigned long millis() { return fs_.millis(); }
-unsigned long micros() { return fs_.micros(); }
+void shiftOut(int dataPin, int clockPin, bit_order bitOrder, byte value) { Funshield_::getInstance().shiftOut(dataPin, clockPin, bitOrder, value); }
+unsigned long millis() { return Funshield_::getInstance().millis(); }
+unsigned long micros() { return Funshield_::getInstance().micros(); }
 void Funshield_::pinMode(int pin, pin_mode mode)
 {
 	// LED
@@ -135,9 +139,3 @@ long random(long min, long max)
 }
 
 using namespace std;
-
-int main()
-{
-	cout << "Hello CMake." << endl;
-	return 0;
-}
