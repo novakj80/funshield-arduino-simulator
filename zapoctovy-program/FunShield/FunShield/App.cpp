@@ -24,13 +24,40 @@ public:
     void OnPaint(wxPaintEvent& evt);
     void DrawLEDs(wxDC& dc, Funshield_& shield);
     //void DrawButtons(wxDC& dc);
+    void DrawSegmDisplay(wxDC& dc, Funshield_& shield);
+    void DrawDigits(wxDC& dc, Funshield_& shield);
+    void DrawGlyph(wxDC& dc, int pos, byte glyph);
 private:
     SimulatorFrame* parent_;
 
-    const wxPoint topLedPosition{ 50, 50 };
+    const wxPoint topLedPosition{ 300, 280 };
     const int ledSize{ 10 };
-    const int ledDistance{ 50 };
+    const int ledDistance{ 30 };
     const wxPoint leftButtonPostiton{ 200, 200 };
+    const wxRect digitSegmentRectangles[7]{ 
+        {10,0,60,10},
+        {70,10,10,65},
+        {70,85,10,65},
+        {10,150,60,10},
+        {0,85,10,65},
+        {0,10,10,65},
+        {10,75,60,10},
+    };
+    /* Make digits bolder
+    const wxRect digitSegmentRectangles[7]{ 
+        {14,0,52,14},
+        {66,14,14,59},
+        {66,87,14,59},
+        {14,146,52,14},
+        {0,87,14,59},
+        {0,14,14,59},
+        {14,75,52,14},
+    };
+    */
+    const wxPoint segmDisplayTopLeft{30, 30};
+    const wxBrush* segmOnBrush = wxRED_BRUSH;
+    const wxBrush* segmOffBrush = wxTheBrushList->FindOrCreateBrush({48, 48, 48});
+    const int segmDotRadius = 12;
 };
 
 class SimulatorFrame : public wxFrame
@@ -60,7 +87,7 @@ class FunshieldSimulatorApp : public wxApp
     {
         // Main window
         // Must be allocated on heap, library manages its destruction
-        frame = new SimulatorFrame("Funshield simulator", wxDefaultPosition, wxDefaultSize);
+        frame = new SimulatorFrame("Funshield simulator", wxDefaultPosition, wxSize{560, 600});
         frame->Show();
         return true;
     }
@@ -75,7 +102,7 @@ DrawingPanel::DrawingPanel(SimulatorFrame* parent) : wxPanel(parent), parent_(pa
 }
 
 SimulatorFrame::SimulatorFrame(const wxString& title, const wxPoint& pos, const wxSize& size)
-    : wxFrame(NULL, wxID_ANY, title, pos, size)
+    : wxFrame(NULL, wxID_ANY, title, pos, size, wxDEFAULT_FRAME_STYLE & ~(wxRESIZE_BORDER | wxMAXIMIZE_BOX))
 {
     CreateStatusBar();
     // Bind event handlers
@@ -103,6 +130,7 @@ void SimulatorFrame::simulationLoop(wxIdleEvent& evt)
 
     wxClientDC dc(panel);
     panel->DrawLEDs(dc, Funshield_::getInstance());
+    panel->DrawDigits(dc, Funshield_::getInstance());
     evt.RequestMore();
 
 }
@@ -138,6 +166,7 @@ void DrawingPanel::OnPaint(wxPaintEvent& evt)
     //dc.SetBrush(*wxGREEN_BRUSH);
     //dc.DrawCircle({ 100,100 }, 30);
     DrawLEDs(dc, Funshield_::getInstance());
+    DrawSegmDisplay(dc, Funshield_::getInstance());
 }
 
 void DrawingPanel::DrawLEDs(wxDC& dc, Funshield_& shield)
@@ -149,3 +178,32 @@ void DrawingPanel::DrawLEDs(wxDC& dc, Funshield_& shield)
     }
 }
 
+void DrawingPanel::DrawSegmDisplay(wxDC& dc, Funshield_& shield)
+{
+    dc.SetBrush(*wxBLACK_BRUSH);
+    dc.DrawRectangle(segmDisplayTopLeft.x - 10, segmDisplayTopLeft.y - 10, 500, 180);
+    DrawDigits(dc, shield);
+}
+void DrawingPanel::DrawDigits(wxDC& dc, Funshield_& shield)
+{
+    for (int i = 0; i < 4; i++)
+    {
+        DrawGlyph(dc, i, shield.getGlyph(i));
+    }
+}
+
+void DrawingPanel::DrawGlyph(wxDC& dc, int pos, byte glyph)
+{
+
+    for (int i = 0; i < 7; i++)
+    {
+        dc.SetBrush(glyph & (1 << i) ? *segmOffBrush : *segmOnBrush);
+        dc.DrawRectangle(
+            digitSegmentRectangles[i].x + pos * (80 + 44) + segmDisplayTopLeft.x,
+            digitSegmentRectangles[i].y + segmDisplayTopLeft.y,
+            digitSegmentRectangles[i].width,
+            digitSegmentRectangles[i].height);
+    }
+    dc.SetBrush(glyph & 0b1000'0000 ? *segmOffBrush : *segmOnBrush);
+    dc.DrawCircle(segmDisplayTopLeft.x + 80 + pos *(80 + 44) + 15, segmDisplayTopLeft.y + 151, segmDotRadius);
+}

@@ -43,8 +43,11 @@ public:
 	bool isLedOn(int led);
 	void setButton(int button, bool pressed);
 	void resetTime() { start_time = std::chrono::high_resolution_clock::now(); }
+	byte getGlyph(int pos);
 	static constexpr int led_count = 4;
 	static constexpr int button_count = 3;
+	static constexpr int digit_count = 4;
+	static constexpr byte segm_off = 0xFF;
 private:
 	static Funshield_ instance;
 	//static constexpr int pin_led[] = { 13,12,11,10 };
@@ -55,7 +58,7 @@ private:
 	static constexpr int first_button = A1;
 
 	static constexpr int latch = 4;
-	static constexpr int clock = 5;
+	static constexpr int clock = 7;
 	static constexpr int data = 8;
 
 	struct pin {

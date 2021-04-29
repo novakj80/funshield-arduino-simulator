@@ -1,7 +1,7 @@
 ﻿#include "FunShield.h"
 
 #include <thread>
-Funshield_ Funshield_::instance;
+Funshield_ Funshield_::instance{};
 Funshield_& Funshield_::getInstance()
 {
 	return Funshield_::instance;
@@ -107,6 +107,11 @@ void Funshield_::setButton(int button, bool pressed)
 {
 	if (button >= button_count || button < 0) return;
 	button_pin[button].level = pressed ? LOW : HIGH;
+}
+
+byte Funshield_::getGlyph(int pos)
+{
+	return segm_pos & (1 << pos) ? segm_data : segm_off;
 }
 
 unsigned long Funshield_::millis()
