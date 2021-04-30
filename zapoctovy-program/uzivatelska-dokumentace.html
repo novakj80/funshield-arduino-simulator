@@ -1,0 +1,166 @@
+﻿<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>dokumentace</title>
+  <link rel="stylesheet" href="https://stackedit.io/style.css" />
+</head>
+
+<body class="stackedit">
+  <div class="stackedit__html"><h1 id="funshield-simulator">Funshield simulator</h1>
+<h2 id="uživatelská-dokumentace">Uživatelská dokumentace</h2>
+<p>Shield pro arduino je deska, která se snadno nasadí na arduino. Funshield obsahuje jednoduché elektronické součástky. Je vhodný pro výuku programování a seznámení se s Arduinem a jazyky C/C++.</p>
+<p>Funshield simulator je virtuální programovatelný funshield. Obsahuje tlačítka, LED diody a segmentový displej. Kód, který funguje na Arduinu, funguje i na simulátoru.</p>
+<h3 id="kompilace">Kompilace</h3>
+<p>Stáhněte git submoduly</p>
+<pre class=" language-bash"><code class="prism  language-bash"><span class="token function">git</span> submodule update --init --recursive
+</code></pre>
+<p>Ke kompilaci je potřeba mít nainstalovaný CMake a kompilátor jazyka C++. Program používá multiplatformní knihovnu wxWidgets, je tedy možné kompilovat na windows i linuxu.</p>
+<p>Program pro funshield - soubor .ino zkopírujte do složky <code>src</code>. Jeho název doplňte do <code>CMakeLists.txt</code> - na řádku <code>set(ino_file "novak.ino")</code> nahraďte <code>novak.ino</code> za název vašeho souboru.</p>
+<h4 id="postup-ve-visual-studiu-2019">Postup ve visual studiu 2019</h4>
+<p>Je nutné mít nainstalovanou sadu vývoj desktopových aplikací pomocí C++ (měla by zahrnovat i nástoje C++ CMake).</p>
+<p>Stačí ve Visual Studiu otevřít složku s projektem <code>funshield/src</code>. Pro sestavení zvolte z menu Build -&gt; Build All.</p>
+<h4 id="developer-command-prompt-for-vs-2019">Developer command prompt for VS 2019</h4>
+<p>Také nutné mít nainstalovanou sadu vývoj desktopových aplikací pomocí C++ (měla by zahrnovat i nástoje C++ CMake).</p>
+<pre class=" language-bash"><code class="prism  language-bash"><span class="token function">mkdir</span> build
+<span class="token function">cd</span> build
+cmake <span class="token punctuation">..</span>
+cmake --build <span class="token keyword">.</span>
+</code></pre>
+<p>Pro opakované sestavení stačí ve vytvořené složce spustit <code>cmake --build .</code></p>
+<h4 id="postup-na-linuxu">Postup na linuxu</h4>
+<p>Přejděte do složky se zdrojovými soubory <code>funshield/src</code> a proveďte následující příkazy</p>
+<pre class=" language-bash"><code class="prism  language-bash"><span class="token function">mkdir</span> build
+<span class="token function">cd</span> build
+cmake <span class="token punctuation">..</span>
+<span class="token function">make</span>
+</code></pre>
+<h3 id="běh-simulace">Běh simulace</h3>
+<p>Simulace začne automaticky při spuštění programu. K restartování program zavřete a znovu spusťte.</p>
+<p>Tlačítka ovládají klávesy A, S, D. Stisknuté tlačítko je znázorněno zelenou barvou.</p>
+<h3 id="struktura-programu">Struktura programu</h3>
+<p>Program se nachází v jednom .ino souboru, volitelně je možné přidat hlavičkové soubory.</p>
+<p>Na začátku zdrojového souboru includujeme API funshieldu: <code>#include "funshield.h"</code>. Potom direktivou <code>using namespace fs;</code> jej rozbalíme do globálního prostoru jmen.</p>
+<p>Funkce <code>setup</code> proběhne jednou na začátku programu. Do ní patří inicializace pinů a inicializace dalších datových struktur, které používáte. Po provedení <code>setup</code> se opakovaně (přibližně 1000x/s) volá <code>loop</code>. Do funkce <code>loop</code> patří samotný výkonný kód.</p>
+<p>Hello world program, který rozsvítí LED diodu</p>
+<pre class=" language-c"><code class="prism ++ language-c"><span class="token macro property">#<span class="token directive keyword">include</span> <span class="token string">"funshield.h"</span></span>
+using namespace fs<span class="token punctuation">;</span>
+
+<span class="token keyword">void</span> <span class="token function">setup</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+    <span class="token comment">// Run once</span>
+    <span class="token function">pinMode</span><span class="token punctuation">(</span><span class="token number">13</span><span class="token punctuation">,</span> OUTPUT<span class="token punctuation">)</span><span class="token punctuation">;</span> <span class="token comment">// Nastavíme režim pinu, kde je dioda připojená, na výstupní</span>
+<span class="token punctuation">}</span>
+
+<span class="token keyword">void</span> <span class="token function">loop</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+    <span class="token comment">// Run repeatedly</span>
+	<span class="token function">digitalWrite</span><span class="token punctuation">(</span><span class="token number">13</span><span class="token punctuation">,</span> LOW<span class="token punctuation">)</span><span class="token punctuation">;</span> <span class="token comment">// Zapsáním LOW na pin, kde je dioda připojená, LED rozsvítíme</span>
+<span class="token punctuation">}</span>
+</code></pre>
+<h3 id="součástky-a-jejich-programování">Součástky a jejich programování</h3>
+<p>Hezký popis shieldu najdete <a href="http://kabinet.fyzika.net/dilna/ARDUINO/funduino-popis.php">zde</a>. Bzučák a odporový trimr v simulátoru nejsou implementované.</p>
+<h4 id="led-diody">LED diody</h4>
+<p>Na shieldu jsou 4 LED diody připojené na pinech 13, 12, 11, 10 (směrem shora). Ovládají se zápisem na pin. Pro jejich použití je potřeba nastavit tyto piny jako výstupní: <code>pinMode(pin, OUTPUT)</code>. Při nastavení pinu jako vstupní dioda nesvítí.</p>
+<p>Rozsvícení - zápis LOW: <code>digitalWrite(pin, LOW)</code><br>
+Zhasnutí - zápis HIGH: <code>digitalWrite(pin, HIGH)</code></p>
+<h4 id="tlačítka">Tlačítka</h4>
+<p>Na shieldu jsou 3 tlačítka připojené na pinech A1, A2, A3. Pro čtení stavu tlačítka musí být odpovídající piny nastavené jako vstupní. Není nutné volat explicitně pinMode, protože INPUT je již výchozí stav na Arduinu.</p>
+<p>Stav tlačítka přečteme zavoláním funkce <code>digitalRead(pin)</code><br>
+Stisknuto - přečte se hodnota LOW<br>
+Nestisknuto - přečte se hodnota HIGH</p>
+<h4 id="místný-segmentový-displej">4-místný segmentový displej</h4>
+<p>Segmentový displej se ovládá pomocí posuvného registru. Registr má 3 piny: latch, clock a data. Tyto piny musejí být nastavené jako výstupní.</p>
+<p>Latch - pin 4. Pro start zápisu nastavíme na LOW, pro konec zápisu nastavíme na HIGH.<br>
+Clock - pin 7.<br>
+Data  - pin 8.</p>
+<p>Zápis se provede dvěma zavoláním funkce <code>shiftOut(dataPin, clockPin, bitOrder, value)</code>.  Správné pořadí bitů je MSBFIRST.  První zapsaný byte zvolí segmenty, které se mají rozsvítit.<br>
+<img src="https://upload.wikimedia.org/wikipedia/commons/thumb/0/02/7_segment_display_labeled.svg/1200px-7_segment_display_labeled.svg.png" height="200pt"><br>
+Inverzní logika: bit 1 ∼ svítí, bit 0 ∼ nesvítí.</p>
+
+<table>
+<thead>
+<tr>
+<th>index bitu</th>
+<th>7</th>
+<th>6</th>
+<th>5</th>
+<th>4</th>
+<th>3</th>
+<th>2</th>
+<th>1</th>
+<th>0</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>segment</td>
+<td>DP</td>
+<td>G</td>
+<td>F</td>
+<td>E</td>
+<td>D</td>
+<td>C</td>
+<td>B</td>
+<td>A</td>
+</tr>
+</tbody>
+</table><p>Druhý zapsaný byte je bitová maska pro pozice, na kterých se vybrané segmenty rozsvítí.</p>
+
+<table>
+<thead>
+<tr>
+<th>Pozice zleva</th>
+<th>první</th>
+<th>druhá</th>
+<th>třetí</th>
+<th>čtvrtá</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>svítí vybrané segmenty</td>
+<td>xxxxxxx1</td>
+<td>xxxxxx1x</td>
+<td>xxxxx1xx</td>
+<td>xxxx1xxx</td>
+</tr>
+<tr>
+<td>nesvítí</td>
+<td>xxxxxxx0</td>
+<td>xxxxxx0x</td>
+<td>xxxxx0xx</td>
+<td>xxxx0xxx</td>
+</tr>
+</tbody>
+</table><p>Příklad: rozsvícení 0 na dvou prostředních pozicích by vypadalo takto:</p>
+<pre class=" language-c"><code class="prism ++ language-c">  <span class="token function">digitalWrite</span><span class="token punctuation">(</span><span class="token number">4</span><span class="token punctuation">,</span> LOW<span class="token punctuation">)</span><span class="token punctuation">;</span>  <span class="token comment">//start zápisu LOW</span>
+  <span class="token function">shiftOut</span><span class="token punctuation">(</span><span class="token number">8</span><span class="token punctuation">,</span> <span class="token number">7</span><span class="token punctuation">,</span> MSBFIRST<span class="token punctuation">,</span> <span class="token number">0xC0</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+  <span class="token function">shiftOut</span><span class="token punctuation">(</span><span class="token number">8</span><span class="token punctuation">,</span> <span class="token number">7</span><span class="token punctuation">,</span> MSBFIRST<span class="token punctuation">,</span> 0b0000'<span class="token number">0110</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+  <span class="token function">digitalWrite</span><span class="token punctuation">(</span><span class="token number">4</span><span class="token punctuation">,</span> HIGH<span class="token punctuation">)</span><span class="token punctuation">;</span>  <span class="token comment">//konec zápisu HIGH</span>
+</code></pre>
+<h3 id="další-funkce">Další funkce</h3>
+<p>Více je v <a href="https://www.arduino.cc/reference/en/">referenci Arduina</a>. Sériová linka není implementována (má prázdnou implementaci).</p>
+<p><code>void delay(unsigned long millis)</code><br>
+<code>void delayMicroseconds(unsigned int us)</code><br>
+Přeruší běh programu na zadaný počet milisekund. Program po tuto dobu ale nebude reagovat na žádný vstup. Doporučuji NEPOUŽÍVAT. K čekání použijte <code>millis</code></p>
+<p><code>unsigned long millis()</code><br>
+<code>unsigned long micros()</code><br>
+Vrátí počet milisekund (mikrosekund) uplynulých od spuštění programu.</p>
+<p><code>isAlpha(char c)</code><br>
+<code>isAlphaNumeric(char c)</code><br>
+<code>isControl(char c)</code><br>
+<code>isDigit(char c)</code><br>
+<code>isGraph(char c)</code><br>
+<code>isHexadecimalDigit(char c)</code><br>
+<code>isLowerCase(char c)</code><br>
+<code>isPrintable(char c)</code><br>
+<code>isPunct(char c)</code><br>
+<code>isSpace(char c)</code><br>
+<code>isUpperCase(char c)</code><br>
+<code>isWhitespace(char c)</code><br>
+Metody pro práci se znaky.</p>
+</div>
+</body>
+
+</html>
