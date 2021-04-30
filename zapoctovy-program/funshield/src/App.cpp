@@ -1,8 +1,8 @@
 // app.cpp: Definuje vstupní bod pro aplikaci.
-// Rename constant INPUT because INPUT is used by wxWidgets on Windows (defined in winuser.h)
-#define INPUT pin_mode_INPUT
-#include "FunShield.h"
-#undef INPUT
+
+#include "funshield.h"
+using Funshield_ = fs::Funshield_;
+#include <sstream>
 // Include wxWidgets library headers
 // For compilers that support precompilation, includes "wx/wx.h".
 #include <wx/wxprec.h>
@@ -23,7 +23,7 @@ public:
     DrawingPanel(SimulatorFrame* parent);
     void OnPaint(wxPaintEvent& evt);
     void DrawLEDs(wxDC& dc, Funshield_& shield);
-    //void DrawButtons(wxDC& dc);
+    void DrawButtons(wxDC& dc, Funshield_& shield);
     void DrawSegmDisplay(wxDC& dc, Funshield_& shield);
     void DrawDigits(wxDC& dc, Funshield_& shield);
     void DrawGlyph(wxDC& dc, int pos, byte glyph);
@@ -31,9 +31,11 @@ private:
     SimulatorFrame* parent_;
 
     const wxPoint topLedPosition{ 300, 280 };
-    const int ledSize{ 10 };
+    const int ledRadius{ 10 };
     const int ledDistance{ 30 };
-    const wxPoint leftButtonPostiton{ 200, 200 };
+    const wxPoint leftButtonPosition{ 30, 280 };
+    const int buttonRadius{15};
+    const int buttonDistance{ 50 };
     const wxRect digitSegmentRectangles[7]{ 
         {10,0,60,10},
         {70,10,10,65},
@@ -58,6 +60,11 @@ private:
     const wxBrush* segmOnBrush = wxRED_BRUSH;
     const wxBrush* segmOffBrush = wxTheBrushList->FindOrCreateBrush({48, 48, 48});
     const int segmDotRadius = 12;
+    // Number of loop cycles for which digit will be visible
+    // after it is turned off. This eliminates flickering when
+    // using multiplexing.
+    const int displayDuration = 4;
+    int loopsToWait[Funshield_::digit_count]{ 0 };
 };
 
 class SimulatorFrame : public wxFrame
@@ -74,9 +81,11 @@ private:
 
     bool renderLoopRunning = true;
     bool minimized = false;    
-    bool buttonPressed[Funshield_::button_count];
+    bool buttonPressed[Funshield_::button_count]{ false };
     // Mapping of keyboard keys to arduino buttons
     const wxKeyCode buttonKeys[Funshield_::button_count] { wxKeyCode::WXK_NUMPAD1, wxKeyCode::WXK_NUMPAD2, wxKeyCode::WXK_NUMPAD3 };
+    unsigned long lastTime;
+    int loopsInSecond;
 };
 
 // Main app class
@@ -87,7 +96,7 @@ class FunshieldSimulatorApp : public wxApp
     {
         // Main window
         // Must be allocated on heap, library manages its destruction
-        frame = new SimulatorFrame("Funshield simulator", wxDefaultPosition, wxSize{560, 600});
+        frame = new SimulatorFrame("Funshield simulator", wxDefaultPosition, wxSize{560, 500});
         frame->Show();
         return true;
     }
@@ -114,6 +123,15 @@ SimulatorFrame::SimulatorFrame(const wxString& title, const wxPoint& pos, const 
     panel->Bind(wxEVT_PAINT, &DrawingPanel::OnPaint, panel);
     panel->Bind(wxEVT_KEY_DOWN, &SimulatorFrame::OnKeyDown, this);
     panel->Bind(wxEVT_KEY_UP, &SimulatorFrame::OnKeyUp, this);
+    Bind(wxEVT_KEY_DOWN, &SimulatorFrame::OnKeyDown, this);
+    Bind(wxEVT_KEY_UP, &SimulatorFrame::OnKeyUp, this);
+
+    SetStatusText("Loop is running");
+}
+
+bool SimulatorFrame::isButtonPressed(int button)
+{
+    return buttonPressed[button];
 }
 
 void SimulatorFrame::simulationLoop(wxIdleEvent& evt)
@@ -121,16 +139,20 @@ void SimulatorFrame::simulationLoop(wxIdleEvent& evt)
     // No need to draw funshield state if the window is minimized
     if (minimized) return;
     loop();
-    std::string led_str{};
-    for (int i = 0; i < Funshield_::getInstance().led_count; i++)
-    {
-        if (Funshield_::getInstance().isLedOn(i)) led_str += 'O'; else led_str += '.';
-    }
-    SetStatusText(led_str);
 
     wxClientDC dc(panel);
     panel->DrawLEDs(dc, Funshield_::getInstance());
     panel->DrawDigits(dc, Funshield_::getInstance());
+    panel->DrawButtons(dc, Funshield_::getInstance());
+    if (lastTime + 1000 > Funshield_::getInstance().millis()) loopsInSecond++;
+    else {
+        lastTime = Funshield_::getInstance().millis();
+        std::stringstream statusText{};
+        statusText << loopsInSecond;
+        statusText << " loops in second";
+        SetStatusText(statusText.str());
+        loopsInSecond = 0;
+    }
     evt.RequestMore();
 
 }
@@ -141,7 +163,12 @@ void SimulatorFrame::OnKeyDown(wxKeyEvent& evt)
     // Check if keycode matches any button
     for (int i = 0; i < Funshield_::button_count; i++)
     {
-        if (key == buttonKeys[i]) Funshield_::getInstance().setButton(i, true);
+        if (key == buttonKeys[i]) 
+        { 
+            buttonPressed[i] = true;
+            Funshield_::getInstance().setButton(i, true);
+
+        }
     }
 }
 
@@ -151,8 +178,13 @@ void SimulatorFrame::OnKeyUp(wxKeyEvent& evt)
     // Check if keycode matches any button
     for (int i = 0; i < Funshield_::button_count; i++)
     {
-        if (key == buttonKeys[i]) Funshield_::getInstance().setButton(i, false);
+        if (key == buttonKeys[i])
+        {
+            buttonPressed[i] = false;
+            Funshield_::getInstance().setButton(i, false);
+        }
     }
+
 }
 
 void SimulatorFrame::OnMinimize(wxIconizeEvent& evt)
@@ -166,6 +198,7 @@ void DrawingPanel::OnPaint(wxPaintEvent& evt)
     //dc.SetBrush(*wxGREEN_BRUSH);
     //dc.DrawCircle({ 100,100 }, 30);
     DrawLEDs(dc, Funshield_::getInstance());
+    DrawButtons(dc, Funshield_::getInstance());
     DrawSegmDisplay(dc, Funshield_::getInstance());
 }
 
@@ -173,8 +206,17 @@ void DrawingPanel::DrawLEDs(wxDC& dc, Funshield_& shield)
 {
     for (int i = 0; i < shield.led_count; i++)
     {
-        dc.SetBrush(shield.isLedOn(i) ? *wxGREEN_BRUSH : *wxGREY_BRUSH);
-        dc.DrawCircle(topLedPosition.x, topLedPosition.y + ((shield.led_count - i - 1) * ledDistance), ledSize);
+        dc.SetBrush(shield.isLedOn(i) ? *wxRED_BRUSH : *wxGREY_BRUSH);
+        dc.DrawCircle(topLedPosition.x, topLedPosition.y + ((shield.led_count - i - 1) * ledDistance), ledRadius);
+    }
+}
+
+void DrawingPanel::DrawButtons(wxDC& dc, Funshield_& shield)
+{
+    for (int i = 0; i < shield.button_count; i++)
+    {
+        dc.SetBrush(parent_->isButtonPressed(i) ? *wxGREEN_BRUSH : *wxBLACK_BRUSH);
+        dc.DrawCircle(leftButtonPosition.x + ((shield.button_count - i - 1) * buttonDistance), leftButtonPosition.y, buttonRadius);
     }
 }
 
@@ -186,9 +228,16 @@ void DrawingPanel::DrawSegmDisplay(wxDC& dc, Funshield_& shield)
 }
 void DrawingPanel::DrawDigits(wxDC& dc, Funshield_& shield)
 {
+    byte posBitmask = shield.getPositionBitmask();
     for (int i = 0; i < 4; i++)
     {
-        DrawGlyph(dc, i, shield.getGlyph(i));
+        bool digitIsOn = posBitmask & (1 << i);
+        if (digitIsOn) loopsToWait[i] = displayDuration;
+        if (digitIsOn || loopsToWait[i] == 0)
+        {
+            DrawGlyph(dc, i, shield.getGlyph(i));
+        }
+        else loopsToWait[i]--;
     }
 }
 

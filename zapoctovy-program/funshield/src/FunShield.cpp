@@ -1,29 +1,29 @@
-﻿#include "FunShield.h"
+﻿#include "funshield.h"
 
 #include <thread>
-Funshield_ Funshield_::instance{};
-Funshield_& Funshield_::getInstance()
+fs::Funshield_ fs::Funshield_::instance{};
+fs::Funshield_& fs::Funshield_::getInstance()
 {
-	return Funshield_::instance;
+	return fs::Funshield_::instance;
 }
-serial_monitor Serial;
-void pinMode(int pin, pin_mode mode)
+fs::serial_monitor Serial;
+void fs::pinMode(int pin, fs::pin_mode mode)
 {
-	Funshield_::getInstance().pinMode(pin, mode);
+	fs::Funshield_::getInstance().pinMode(pin, mode);
 }
 
-void digitalWrite(int pin, pin_level value) 
+void fs::digitalWrite(int pin, fs::pin_level value) 
 {
-	Funshield_::getInstance().digitalWrite(pin, value);
+	fs::Funshield_::getInstance().digitalWrite(pin, value);
 }
-pin_level digitalRead(int pin) 
+fs::pin_level fs::digitalRead(int pin) 
 { 
-	return Funshield_::getInstance().digitalRead(pin);
+	return fs::Funshield_::getInstance().digitalRead(pin);
 }
-void shiftOut(int dataPin, int clockPin, bit_order bitOrder, byte value) { Funshield_::getInstance().shiftOut(dataPin, clockPin, bitOrder, value); }
-unsigned long millis() { return Funshield_::getInstance().millis(); }
-unsigned long micros() { return Funshield_::getInstance().micros(); }
-void Funshield_::pinMode(int pin, pin_mode mode)
+void fs::shiftOut(int dataPin, int clockPin, fs::bit_order bitOrder, fs::byte value) { fs::Funshield_::getInstance().shiftOut(dataPin, clockPin, bitOrder, value); }
+unsigned long fs::millis() { return fs::Funshield_::getInstance().millis(); }
+unsigned long fs::micros() { return fs::Funshield_::getInstance().micros(); }
+void fs::Funshield_::pinMode(int pin, fs::pin_mode mode)
 {
 	// LED
 	if (pinIsLed(pin)) {
@@ -46,7 +46,7 @@ void Funshield_::pinMode(int pin, pin_mode mode)
 	}
 }
 
-pin_level Funshield_::digitalRead(int pin)
+fs::pin_level fs::Funshield_::digitalRead(int pin)
 {
 	if (pinIsButton(pin)) {
 		return button_pin[pin - first_button].level;
@@ -72,7 +72,7 @@ pin_level Funshield_::digitalRead(int pin)
 	return LOW;
 }
 
-void Funshield_::digitalWrite(int pin, pin_level value)
+void fs::Funshield_::digitalWrite(int pin, fs::pin_level value)
 {
 	if (pinIsLed(pin)) led_pin[pin - first_led].level = value;
 	else if (pin == latch) {
@@ -86,7 +86,7 @@ void Funshield_::digitalWrite(int pin, pin_level value)
 	// Ignore writes to other pins
 }
 
-void Funshield_::shiftOut(int dataPin, int clockPin, bit_order bitOrder, byte value)
+void fs::Funshield_::shiftOut(int dataPin, int clockPin,  bit_order bitOrder, byte value)
 {
 	if (dataPin == data && clockPin == clock) {
 		if (bitOrder == LSBFIRST) {
@@ -97,50 +97,54 @@ void Funshield_::shiftOut(int dataPin, int clockPin, bit_order bitOrder, byte va
 	}
 }
 
-bool Funshield_::isLedOn(int led)
+bool fs::Funshield_::isLedOn(int led)
 {
 	if (led >= led_count || led < 0) return false;
 	return led_pin[led].mode == OUTPUT && led_pin[led].level == LOW;
 }
 
-void Funshield_::setButton(int button, bool pressed)
+void fs::Funshield_::setButton(int button, bool pressed)
 {
 	if (button >= button_count || button < 0) return;
 	button_pin[button].level = pressed ? LOW : HIGH;
 }
 
-byte Funshield_::getGlyph(int pos)
+fs::byte fs::Funshield_::getGlyph(int pos)
 {
 	return segm_pos & (1 << pos) ? segm_data : segm_off;
 }
 
-unsigned long Funshield_::millis()
+fs::byte fs::Funshield_::getPositionBitmask()
 {
-	return std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - start_time).count();
+	return segm_pos;
 }
 
-unsigned long Funshield_::micros()
+unsigned long fs::Funshield_::millis()
 {
-	return std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now() - start_time).count();
+	return (unsigned long)std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - start_time).count();
 }
 
-void delay(unsigned long ms)
+unsigned long fs::Funshield_::micros()
+{
+	return (unsigned long)std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now() - start_time).count();
+}
+
+void fs::delay(unsigned long ms)
 {
 	std::this_thread::sleep_for(std::chrono::milliseconds(ms));
 }
-void delayMicroseconds(unsigned int us)
+void fs::delayMicroseconds(unsigned int us)
 {
 	std::this_thread::sleep_for(std::chrono::microseconds(us));
 }
 
-long random(long max) 
+long fs::random(long max) 
 { 
 	return std::rand() % max; 
 }
-long random(long min, long max)
+
+long fs::random(long min, long max)
 {
   if (min >= max) return min;
-  return random(max - min) + min;
+  return fs::random(max - min) + min;
 }
-
-using namespace std;
