@@ -84,7 +84,7 @@ private:
     bool minimized = false;    
     bool buttonPressed[Funshield_::button_count]{ false };
     // Mapping of keyboard keys to arduino buttons
-    const wxKeyCode buttonKeys[Funshield_::button_count] { 'A',  'S', 'D' };
+    const int buttonKeys[Funshield_::button_count] { 'A',  'S', 'D' };
     unsigned long lastTime;
     int loopsInSecond;
 };
