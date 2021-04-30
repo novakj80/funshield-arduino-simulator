@@ -6,7 +6,7 @@ fs::Funshield_& fs::Funshield_::getInstance()
 {
 	return fs::Funshield_::instance;
 }
-fs::serial_monitor Serial;
+fs::serial_monitor fs::Serial;
 void fs::pinMode(int pin, fs::pin_mode mode)
 {
 	fs::Funshield_::getInstance().pinMode(pin, mode);
@@ -90,7 +90,9 @@ void fs::Funshield_::shiftOut(int dataPin, int clockPin,  bit_order bitOrder, by
 {
 	if (dataPin == data && clockPin == clock) {
 		if (bitOrder == LSBFIRST) {
-			// TODO change bit order here
+			value = (value & 0xF0) >> 4 | (value & 0x0F) << 4;
+			value = (value & 0xCC) >> 2 | (value & 0x33) << 2;
+			value = (value & 0xAA) >> 1 | (value & 0x55) << 1;			
 		}
 		segm_data_buffer = segm_pos_buffer;
 		segm_pos_buffer = value;

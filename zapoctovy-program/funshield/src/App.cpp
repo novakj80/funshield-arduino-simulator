@@ -27,6 +27,7 @@ public:
     void DrawSegmDisplay(wxDC& dc, Funshield_& shield);
     void DrawDigits(wxDC& dc, Funshield_& shield);
     void DrawGlyph(wxDC& dc, int pos, byte glyph);
+    void DrawButtonBackground(wxDC& dc);
 private:
     SimulatorFrame* parent_;
 
@@ -63,7 +64,7 @@ private:
     // Number of loop cycles for which digit will be visible
     // after it is turned off. This eliminates flickering when
     // using multiplexing.
-    const int displayDuration = 4;
+    const int displayDuration = Funshield_::digit_count;
     int loopsToWait[Funshield_::digit_count]{ 0 };
 };
 
@@ -83,7 +84,7 @@ private:
     bool minimized = false;    
     bool buttonPressed[Funshield_::button_count]{ false };
     // Mapping of keyboard keys to arduino buttons
-    const wxKeyCode buttonKeys[Funshield_::button_count] { wxKeyCode::WXK_NUMPAD1, wxKeyCode::WXK_NUMPAD2, wxKeyCode::WXK_NUMPAD3 };
+    const wxKeyCode buttonKeys[Funshield_::button_count] { 'A',  'S', 'D' };
     unsigned long lastTime;
     int loopsInSecond;
 };
@@ -108,6 +109,7 @@ wxIMPLEMENT_APP(FunshieldSimulatorApp);
 
 DrawingPanel::DrawingPanel(SimulatorFrame* parent) : wxPanel(parent), parent_(parent)
 {
+    SetBackgroundColour(wxColour{ 90, 120, 223 });
 }
 
 SimulatorFrame::SimulatorFrame(const wxString& title, const wxPoint& pos, const wxSize& size)
@@ -195,9 +197,8 @@ void SimulatorFrame::OnMinimize(wxIconizeEvent& evt)
 void DrawingPanel::OnPaint(wxPaintEvent& evt)
 {
     wxPaintDC dc(this); 
-    //dc.SetBrush(*wxGREEN_BRUSH);
-    //dc.DrawCircle({ 100,100 }, 30);
     DrawLEDs(dc, Funshield_::getInstance());
+    DrawButtonBackground(dc);
     DrawButtons(dc, Funshield_::getInstance());
     DrawSegmDisplay(dc, Funshield_::getInstance());
 }
@@ -217,6 +218,15 @@ void DrawingPanel::DrawButtons(wxDC& dc, Funshield_& shield)
     {
         dc.SetBrush(parent_->isButtonPressed(i) ? *wxGREEN_BRUSH : *wxBLACK_BRUSH);
         dc.DrawCircle(leftButtonPosition.x + ((shield.button_count - i - 1) * buttonDistance), leftButtonPosition.y, buttonRadius);
+    }
+}
+
+void DrawingPanel::DrawButtonBackground(wxDC& dc)
+{
+    dc.SetBrush(*wxLIGHT_GREY_BRUSH);
+    for (int i = 0; i < Funshield_::button_count; i++)
+    {
+        dc.DrawRectangle(leftButtonPosition.x + (i * buttonDistance) - buttonRadius - 5, leftButtonPosition.y - buttonRadius - 5, 2 * buttonRadius + 10, 2 * buttonRadius + 10);
     }
 }
 

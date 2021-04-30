@@ -17,10 +17,10 @@ endif()
 add_subdirectory("libs/wxWidgets")
 
 
-add_executable(App ${exe_type} "App.cpp" "funshield.cpp" ${ino_file})
+add_executable(simulator ${exe_type} "App.cpp" "funshield.cpp" ${ino_file})
 
-target_link_libraries(App wx::base wx::core)
+target_link_libraries(simulator wx::base wx::core)
 
 if(wxBUILD_SHARED)
-    target_compile_definitions(App PRIVATE WXUSINGDLL)
+    target_compile_definitions(simulator PRIVATE WXUSINGDLL)
 endif()

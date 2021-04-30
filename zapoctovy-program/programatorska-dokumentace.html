@@ -1,0 +1,106 @@
+﻿<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>dokumentace</title>
+  <link rel="stylesheet" href="https://stackedit.io/style.css" />
+</head>
+
+<body class="stackedit">
+  <div class="stackedit__html"><h1 id="funshield-simulator">Funshield simulator</h1>
+<h2 id="programátorská-dokumentace">Programátorská dokumentace</h2>
+<p>Funshield simulator je virtuální programovatelný funshield. Obsahuje tlačítka, LED diody a segmentový displej. Cílem projektu je, aby se simulátorem byly kompatibilní i zdrojové kódy pro skutečné arduino. Na začátek stačí přidat dva řádky, které includují definice v hlavičkovém souboru a rozbalí namespace fs.</p>
+<pre class=" language-c"><code class="prism ++ language-c"><span class="token macro property">#<span class="token directive keyword">include</span> <span class="token string">"funshield.h"</span></span>
+using namespace fs<span class="token punctuation">;</span>
+</code></pre>
+<p>Zdrojové kódy jsou rozdělené do čtyř souborů:<br>
+<code>novak.ino</code> obsahuje programy pro funshield, který jsem vytvářel v rámci předmětu počítačové systémy. S nimi jsem testoval funkčnost simulátoru. V souboru <code>app.cpp</code> je implementované zobrazení segmentového displeje, tlačítek a LED diod na obrazovce a ovládání tlačítek. Soubory <code>funshield.h</code> a <code>funshield.cpp</code> obsahují objekt představující funshield, definice a implementace části API arduina, která je potřebná pro ovládání funshieldu.</p>
+<h3 id="namespace-fs">Namespace fs</h3>
+<p>Namespace, který zapoudřuje arduino API a třídu FunShield_.</p>
+<h3 id="třída-funshield_">Třída FunShield_</h3>
+<p>Třída reprezenuje stav arduina a shieldu.</p>
+<h4 id="metody-určené-pro-použití-z-implementace-grafické-části">Metody určené pro použití z implementace grafické části</h4>
+<pre class=" language-c"><code class="prism ++ language-c">bool <span class="token function">IsLedOn</span><span class="token punctuation">(</span><span class="token keyword">int</span> led<span class="token punctuation">)</span>
+</code></pre>
+<p>Vrátí, zda daná LED svítí. LED diody jsou číslované od 0 shora, nepoužívá se číslo pinu.</p>
+<pre class=" language-c"><code class="prism ++ language-c"><span class="token keyword">void</span> <span class="token function">setButton</span><span class="token punctuation">(</span><span class="token keyword">int</span> button<span class="token punctuation">,</span> bool pressed<span class="token punctuation">)</span>
+</code></pre>
+<p>Nastaví, zda je tlačítko stisknuté tím, že k odpovídajícímu pinu uloží LOW (v případě stisknutého) nebo HIGH. Tlačítka jsou číslované od 0 zleva, nepoužívá se číslo pinu.</p>
+<pre class=" language-c"><code class="prism ++ language-c">byte <span class="token function">getGlyph</span><span class="token punctuation">(</span><span class="token keyword">int</span> pos<span class="token punctuation">)</span><span class="token punctuation">;</span>
+</code></pre>
+<p>Metoda vrátí, jaký glyph je nastavený na dané pozici segmentového displeje číslováno od 0 zleva. Pokud je pozice vypnutá, vrátí 0xFF - všechny segmenty zhasnuté.</p>
+<pre class=" language-c"><code class="prism ++ language-c">byte <span class="token function">getPositionBitmask</span><span class="token punctuation">(</span><span class="token keyword">int</span> pos<span class="token punctuation">)</span><span class="token punctuation">;</span>
+</code></pre>
+<p>Vrátí aktuální bitovou masku pro výběr pozic segmentového displeje.</p>
+<pre class=" language-c"><code class="prism ++ language-c"><span class="token keyword">void</span> <span class="token function">resetTime</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+</code></pre>
+<p>Resetuje čas, funkce <code>millis</code> a <code>micros</code> začnou počítat čas od 0.</p>
+<h4 id="piny-jejich-zápis-a-čtení">Piny, jejich zápis a čtení</h4>
+<p>Arduino má piny, tyto jsou reprezentované strukturou <code>pin</code>. Objekt FunShield_ má piny pro segmentový displej, každé tlačítko a každou LED diodu. O každém pinu si pamatujeme <code>pin_mode</code> (zda jej uživatel nastavil jako vstupní nebo výstupní) a <code>pin_level.</code> V případě LED <code>pin_level</code> a <code>pin_mode</code> určuje, zda je rozsvícená.</p>
+<p>Pro segmentový displej si ještě pamatujeme byte pro glyph a byte pro bitovou masku pozice.</p>
+<pre class=" language-c"><code class="prism ++ language-c"><span class="token keyword">void</span> <span class="token function">shiftOut</span><span class="token punctuation">(</span><span class="token keyword">int</span> dataPin<span class="token punctuation">,</span> <span class="token keyword">int</span> clockPin<span class="token punctuation">,</span> bit_order bitOrder<span class="token punctuation">,</span> byte value<span class="token punctuation">)</span>
+</code></pre>
+<p>V případě, že datový a hodinový pin je správný, zapíše byte do bufferu segmentového displeje. Buffer se zkopíruje při změně latch z LOW na HIGH.</p>
+<pre class=" language-c"><code class="prism ++ language-c"><span class="token keyword">void</span> <span class="token function">pinMode</span><span class="token punctuation">(</span><span class="token keyword">int</span> pin<span class="token punctuation">,</span> pin_mode mode<span class="token punctuation">)</span>
+</code></pre>
+<p>Nastavuje danému pinu <code>pin_mode</code>. V případě LED ji navíc při nastavení na INPUT zhasne a při nastavení na OUTPUT rozsvítí. Stejné chování má i fyzické arduino.</p>
+<pre class=" language-c"><code class="prism ++ language-c"><span class="token keyword">void</span> <span class="token function">digitalWrite</span><span class="token punctuation">(</span><span class="token keyword">int</span> pin<span class="token punctuation">,</span> pin_level level<span class="token punctuation">)</span>
+</code></pre>
+<p>Zápis na pin. V případě LED se uloží zapsaná hodnota. V případě latch pinu se také uloží zapsaná hodnota, při přechodu latch z LOW na HIGH se navíc zkopírují data z bufferu.<br>
+Zápis na ostatní piny pomocí této metody se ignoruje.</p>
+<pre class=" language-c"><code class="prism ++ language-c">pin_level <span class="token function">digitalRead</span><span class="token punctuation">(</span><span class="token keyword">int</span> pin<span class="token punctuation">)</span>
+</code></pre>
+<p>Při čtení z pinu jsem se snažil maximálně napodobit chování arduina. Čtení tlačítka odpovídá stavu, zda je stisknuto v inverzní logice. Čtení pinu nastaveného na OUTPUT vrátí stav, který na něj byl zapsaný. Čtení pinu nastaveného na INPUT jiného než tlačítka vrátí HIGH. Čtení neznámého pinu vrátí LOW.</p>
+<h4 id="api-arduina">API arduina</h4>
+<p>API arduina tvořené globálními funkcemi (funkce nejsou v žádné třídě nebo namespace), navíc tyto funkce musí fungovat i z uživatelem definovaných globálních funkcí. Z těchto důvodů musí být i stav funshieldu globální.</p>
+<p>To je vyřešeno tak, že třída FunShield_ je singleton - obsahuje svoji instanci, která je přístupná přes veřejnou statickou metodu <code>getInstance</code>.  Všechny  funkce, které potřebují stav shieldu, pouze volají příslušnou medotu na této instanci.</p>
+<h3 id="gui">GUI</h3>
+<p>Aplikace je grafická, protože standardní výstup je omezený a není pro účel zobrazování funshieldu vhodný. C++ nemá standardní knihovnu pro grafiku, proto je potřeba použít nějakou knihovnu. Zvolil jsem multiplatformní knihovnu wxWidgets.</p>
+<h4 id="event-loop">Event loop</h4>
+<p>Každá grafická aplikace dostává akce uživatele jako události. Tyto se zpracovávají ve smyčce událostí. Do této smyčky jsem integroval i smyčku arduina.</p>
+<p>Běh programu lze popsat takto:</p>
+<pre class=" language-c"><code class="prism ++ language-c"><span class="token punctuation">.</span><span class="token punctuation">.</span><span class="token punctuation">.</span>
+<span class="token keyword">while</span><span class="token punctuation">(</span><span class="token operator">!</span>closed<span class="token punctuation">)</span> <span class="token punctuation">{</span>
+	<span class="token function">loop</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+	<span class="token function">render</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+	<span class="token function">process_events</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span class="token punctuation">}</span>
+<span class="token punctuation">.</span><span class="token punctuation">.</span><span class="token punctuation">.</span>
+</code></pre>
+<p>Důsledkem je, že pokud bude volání funkce <code>loop</code> trvat příliš dlouho (například použitím delay), program nebude reagovat, protože nemůže obsloužit události.</p>
+<h4 id="třída-drawingpanel">Třída DrawingPanel</h4>
+<p>Panel (plocha okna) určený pro vykreslování. Kreslení je implementované v metodách:</p>
+<pre class=" language-c"><code class="prism ++ language-c">    <span class="token keyword">void</span> <span class="token function">DrawLEDs</span><span class="token punctuation">(</span>wxDC<span class="token operator">&amp;</span> dc<span class="token punctuation">,</span> Funshield_<span class="token operator">&amp;</span> shield<span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token keyword">void</span> <span class="token function">DrawButtons</span><span class="token punctuation">(</span>wxDC<span class="token operator">&amp;</span> dc<span class="token punctuation">,</span> Funshield_<span class="token operator">&amp;</span> shield<span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token keyword">void</span> <span class="token function">DrawSegmDisplay</span><span class="token punctuation">(</span>wxDC<span class="token operator">&amp;</span> dc<span class="token punctuation">,</span> Funshield_<span class="token operator">&amp;</span> shield<span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token keyword">void</span> <span class="token function">DrawDigits</span><span class="token punctuation">(</span>wxDC<span class="token operator">&amp;</span> dc<span class="token punctuation">,</span> Funshield_<span class="token operator">&amp;</span> shield<span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token keyword">void</span> <span class="token function">DrawGlyph</span><span class="token punctuation">(</span>wxDC<span class="token operator">&amp;</span> dc<span class="token punctuation">,</span> <span class="token keyword">int</span> pos<span class="token punctuation">,</span> byte glyph<span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token keyword">void</span> <span class="token function">DrawButtonBackground</span><span class="token punctuation">(</span>wxDC<span class="token operator">&amp;</span> dc<span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token keyword">void</span> <span class="token function">DrawButtonBackground</span><span class="token punctuation">(</span>wxDC<span class="token operator">&amp;</span> dc<span class="token punctuation">)</span><span class="token punctuation">;</span>
+</code></pre>
+<p>wxDC je interface pro vykreslování v knihovně wxWidgets.</p>
+<p>Třída také obsahuje konstanty, kterými lze nastavit, jak se jednotlivé části vykreslí.</p>
+<p>Kreslení glyphů na segmentovém displeji bylo potřeba optimalizovat pro multiplexing, protože počítačová obrazovka má jiné vlastnosti než LED dioda. Na každé pozici segmentového displeje zůstávají po jeho zhasnutí (při nastavení odpovídajícího bitu bitové masky na 0) svítit segmenty ještě po tři další běhy smyčky.</p>
+<p>Při multiplexingu se během těchto iteracích zapíše, jaké glyphy se mají zobrazovat na ostatních třech pozicích. Následně se tato pozice znovu označí jako aktivní.</p>
+<p>Kdyby světla neměla tuto umělou setrvačnost, způsobilo by to blikání.x</p>
+<h4 id="třída-simulatorframe">Třída SimulatorFrame</h4>
+<p>Tato třída představuje hlavní okno aplikace. Přijímá události stisknutí nebo puštění klávesy. Pokud je klávesa namapovaná na nějaké tlačítko funshieldu, nastaví toto tlačítko jako stisknuté (příp. nestisknuté). Mapování je uložené v poli <code>buttonKeys</code>, jeho editací lze mapování změnit.</p>
+<p>Metody</p>
+<pre class=" language-c"><code class="prism ++ language-c"><span class="token keyword">void</span> <span class="token function">OnKeyDown</span><span class="token punctuation">(</span>wxKeyEvent<span class="token operator">&amp;</span> evt<span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span class="token keyword">void</span> <span class="token function">OnKeyUp</span><span class="token punctuation">(</span>wxKeyEvent<span class="token operator">&amp;</span> evt<span class="token punctuation">)</span><span class="token punctuation">;</span>
+</code></pre>
+<p>jsou obsluhy událostí pro stisk klávesy.</p>
+<p>Metoda</p>
+<pre class=" language-c"><code class="prism ++ language-c"><span class="token keyword">void</span> <span class="token function">OnMinimize</span><span class="token punctuation">(</span>wxIconizeEvent<span class="token operator">&amp;</span> evt<span class="token punctuation">)</span><span class="token punctuation">;</span>
+</code></pre>
+<p>obsluhuje událost minimalizace okna nebo obnovení minimalizovaného okna. Na minimalizované okno totiž není potřeba vykreslovat.</p>
+<p>Metoda</p>
+<pre class=" language-c"><code class="prism ++ language-c"><span class="token keyword">void</span> <span class="token function">simulationLoop</span><span class="token punctuation">(</span>wxIdleEvent<span class="token operator">&amp;</span> evt<span class="token punctuation">)</span><span class="token punctuation">;</span>
+</code></pre>
+<p>je jádro simulace, zavolá <code>loop</code> a nakreslí aktuální stav. Knihovna metodu opakovaně volá. Po skončení knihovna zpracuje případné události a znovu ji zavolá.</p>
+</div>
+</body>
+
+</html>

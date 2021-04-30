@@ -18,7 +18,10 @@
 <pre class=" language-bash"><code class="prism  language-bash"><span class="token function">git</span> submodule update --init --recursive
 </code></pre>
 <p>Ke kompilaci je potřeba mít nainstalovaný CMake a kompilátor jazyka C++. Program používá multiplatformní knihovnu wxWidgets, je tedy možné kompilovat na windows i linuxu.</p>
-<p>Program pro funshield - soubor .ino zkopírujte do složky <code>src</code>. Jeho název doplňte do <code>CMakeLists.txt</code> - na řádku <code>set(ino_file "novak.ino")</code> nahraďte <code>novak.ino</code> za název vašeho souboru.</p>
+<p>Program pro funshield - soubor .ino zkopírujte do složky <code>src</code>. Jeho název doplňte do <code>CMakeLists.txt</code> - na řádku <code>set(ino_file "novak.ino")</code> nahraďte <code>novak.ino</code> za název vašeho souboru. Zkopírujte na začátek vašeho .ino souboru tyto dvě řádky:</p>
+<pre class=" language-c"><code class="prism ++ language-c"><span class="token macro property">#<span class="token directive keyword">include</span> <span class="token string">"funshield.h"</span></span>
+using namespace fs<span class="token punctuation">;</span>
+</code></pre>
 <h4 id="postup-ve-visual-studiu-2019">Postup ve visual studiu 2019</h4>
 <p>Je nutné mít nainstalovanou sadu vývoj desktopových aplikací pomocí C++ (měla by zahrnovat i nástoje C++ CMake).</p>
 <p>Stačí ve Visual Studiu otevřít složku s projektem <code>funshield/src</code>. Pro sestavení zvolte z menu Build -&gt; Build All.</p>
