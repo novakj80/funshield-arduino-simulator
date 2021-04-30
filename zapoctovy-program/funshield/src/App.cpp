@@ -2,6 +2,7 @@
 
 #include "funshield.h"
 using Funshield_ = fs::Funshield_;
+using byte = fs::byte;
 #include <sstream>
 // Include wxWidgets library headers
 // For compilers that support precompilation, includes "wx/wx.h".
