@@ -217,7 +217,7 @@ void DrawingPanel::DrawButtons(wxDC& dc, Funshield_& shield)
     for (int i = 0; i < shield.button_count; i++)
     {
         dc.SetBrush(parent_->isButtonPressed(i) ? *wxGREEN_BRUSH : *wxBLACK_BRUSH);
-        dc.DrawCircle(leftButtonPosition.x + ((shield.button_count - i - 1) * buttonDistance), leftButtonPosition.y, buttonRadius);
+        dc.DrawCircle(leftButtonPosition.x + (i * buttonDistance), leftButtonPosition.y, buttonRadius);
     }
 }
 
