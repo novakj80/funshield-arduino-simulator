@@ -3,6 +3,8 @@
 #
 cmake_minimum_required (VERSION 3.8)
 
+project("funshield")
+
 # Přidejte zdrojový kód ke spustitelnému souboru tohoto projektu.
 if(WIN32)
     set(exe_type WIN32 MACOSX_BUNDLE)
@@ -12,7 +14,7 @@ endif()
 
 add_subdirectory("libs/wxWidgets")
 
-add_executable(App ${exe_type} "App.cpp" "Funshield.cpp" "novak.cpp")
+add_executable(App ${exe_type} "App.cpp" "Funshield.cpp")
 
 target_link_libraries(App wx::base wx::core)
 #if(wxBUILD_SHARED)
