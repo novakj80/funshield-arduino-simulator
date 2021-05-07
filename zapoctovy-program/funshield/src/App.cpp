@@ -32,12 +32,24 @@ public:
 private:
     SimulatorFrame* parent_;
 
+    /* Parameters for displaying funshield */
+    // LEDs
     const wxPoint topLedPosition{ 300, 280 };
     const int ledRadius{ 10 };
     const int ledDistance{ 30 };
+    const wxBrush* ledOnBrush = wxRED_BRUSH;
+    const wxBrush* ledOffBrush = wxGREY_BRUSH;
+
+    // Buttons
     const wxPoint leftButtonPosition{ 30, 280 };
     const int buttonRadius{15};
     const int buttonDistance{ 50 };
+    const char* buttonLabels[Funshield_::button_count] {"A", "S", "D"};
+    const wxBrush* buttonBrush =  wxBLACK_BRUSH;
+    const wxBrush* buttonPressedBrush = wxGREEN_BRUSH;
+    const wxBrush* buttonBackgroundBrush = wxLIGHT_GREY_BRUSH;
+
+    // Segment display
     const wxRect digitSegmentRectangles[7]{ 
         {10,0,60,10},
         {70,10,10,65},
@@ -129,6 +141,7 @@ SimulatorFrame::SimulatorFrame(const wxString& title, const wxPoint& pos, const 
     Bind(wxEVT_KEY_DOWN, &SimulatorFrame::OnKeyDown, this);
     Bind(wxEVT_KEY_UP, &SimulatorFrame::OnKeyUp, this);
 
+    lastTime = Funshield_::getInstance().millis();
     SetStatusText("Loop is running");
 }
 
@@ -208,7 +221,7 @@ void DrawingPanel::DrawLEDs(wxDC& dc, Funshield_& shield)
 {
     for (int i = 0; i < shield.led_count; i++)
     {
-        dc.SetBrush(shield.isLedOn(i) ? *wxRED_BRUSH : *wxGREY_BRUSH);
+        dc.SetBrush(shield.isLedOn(i) ? *ledOnBrush : *ledOffBrush);
         dc.DrawCircle(topLedPosition.x, topLedPosition.y + ((shield.led_count - i - 1) * ledDistance), ledRadius);
     }
 }
@@ -217,17 +230,18 @@ void DrawingPanel::DrawButtons(wxDC& dc, Funshield_& shield)
 {
     for (int i = 0; i < shield.button_count; i++)
     {
-        dc.SetBrush(parent_->isButtonPressed(i) ? *wxGREEN_BRUSH : *wxBLACK_BRUSH);
+        dc.SetBrush(parent_->isButtonPressed(i) ? *buttonPressedBrush : *buttonBrush);
         dc.DrawCircle(leftButtonPosition.x + (i * buttonDistance), leftButtonPosition.y, buttonRadius);
     }
 }
 
 void DrawingPanel::DrawButtonBackground(wxDC& dc)
 {
-    dc.SetBrush(*wxLIGHT_GREY_BRUSH);
+    dc.SetBrush(*buttonBackgroundBrush);
     for (int i = 0; i < Funshield_::button_count; i++)
     {
         dc.DrawRectangle(leftButtonPosition.x + (i * buttonDistance) - buttonRadius - 5, leftButtonPosition.y - buttonRadius - 5, 2 * buttonRadius + 10, 2 * buttonRadius + 10);
+        dc.DrawText(buttonLabels[i], leftButtonPosition.x + (i * buttonDistance) - buttonRadius, leftButtonPosition.y - buttonRadius - 20);
     }
 }
 
@@ -240,7 +254,7 @@ void DrawingPanel::DrawSegmDisplay(wxDC& dc, Funshield_& shield)
 void DrawingPanel::DrawDigits(wxDC& dc, Funshield_& shield)
 {
     byte posBitmask = shield.getPositionBitmask();
-    for (int i = 0; i < 4; i++)
+    for (int i = 0; i < Funshield_::digit_count; i++)
     {
         bool digitIsOn = posBitmask & (1 << i);
         if (digitIsOn) loopsToWait[i] = displayDuration;
